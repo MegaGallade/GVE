@@ -79,7 +79,7 @@ export const constantRoutes = [
         path: 'dashboard',
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
-        meta: { title: 'Dashboard', icon: 'dashboard' }
+        meta: { title: '主页', icon: 'el-icon-s-home' }
       }
     ]
   },
@@ -88,13 +88,12 @@ export const constantRoutes = [
     path: '/profile',
     component: Layout,
     redirect: '/profile/index',
-    // hidden: true,
     children: [
       {
         path: 'index',
         component: () => import('@/views/profile/index'),
         name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
+        meta: { title: '用户', icon: 'user', noCache: true }
       }
     ]
   }
@@ -151,10 +150,10 @@ export const asyncRoutes = [
       meta: { title: '订单管理' }
     },
     {
-      path: 'sales',
-      name: 'SalesOrder',
-      component: () => import('@/views/order/index'),
-      meta: { title: '销售订单' }
+      path: 'details',
+      name: 'OrderDetails',
+      component: () => import('@/views/order/details'),
+      meta: { title: '订单详情' }
     }]
   },
   {

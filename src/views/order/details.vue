@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div>
+    <div class="filter-container">
       <el-input
         v-model="listQuery.order"
         placeholder="请输入表单号"
@@ -9,58 +9,6 @@
         class="filter-item"
         @keyup.enter.native="handleFilter"
       />
-      <el-input
-        v-model="listQuery.running"
-        placeholder="请输入单据号"
-        clearable
-        style="width: 150px"
-        class="filter-item"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-input
-        v-model="listQuery.company"
-        placeholder="请输入单位名称"
-        clearable
-        style="width: 180px"
-        class="filter-item"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-input
-        v-model="listQuery.address"
-        placeholder="请输入地址"
-        clearable
-        style="width: 180px"
-        class="filter-item"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-select
-        v-model="listQuery.orderType"
-        placeholder="类型"
-        clearable
-        class="filter-item"
-        style="width: 100px"
-      >
-        <el-option
-          v-for="item in orderTypeOptions"
-          :key="item.key"
-          :label="item.value"
-          :value="item.key"
-        />
-      </el-select>
-      <el-select
-        v-model="listQuery.plugType"
-        placeholder="出入"
-        clearable
-        class="filter-item"
-        style="width: 100px"
-      >
-        <el-option
-          v-for="item in plugTypeOptions"
-          :key="item.key"
-          :label="item.value"
-          :value="item.key"
-        />
-      </el-select>
       <el-button
         v-waves
         class="filter-item"
@@ -71,34 +19,94 @@
       >
         查询
       </el-button>
-      <el-button
+      <!-- <el-button
         class="filter-item"
         type="primary"
         icon="el-icon-plus"
         @click="handleCreate"
       >
         新建
-      </el-button>
+      </el-button> -->
     </div>
-    <div style="margin: 10px">
-      <el-row>
-        <el-col style="width: 100px">
-          <span>显示信息</span>
-        </el-col>
-        <el-col :span="16">
-          <!-- <el-checkbox
-            v-model="treeExpandAll"
-            class="filter-item"
-            @change="checkExpandAll"
-          >
-            默认展开
-          </el-checkbox> -->
-        </el-col>
-      </el-row>
+    <el-divider class="divider"></el-divider>
+    <div>
+      <h2>极客桥无人机{{ form.orderType }}{{ form.plugType }}库单</h2>
+      <el-form :inline="true" :model="form" label-width="80px" class="mrb">
+        <el-form-item label="表单号">
+          <el-input v-model="form.order" placeholder="请输入表单号"></el-input>
+        </el-form-item>
+        <el-form-item label="单据号">
+          <el-input
+            v-model="form.running"
+            placeholder="请输入单据号"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span class="title">对方单位信息</span>
+      <el-form :inline="true" :model="form" label-width="80px">
+        <el-form-item label="单位名称">
+          <el-input
+            v-model="form.company"
+            class="wmid"
+            placeholder="请输入单位名称"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="联系人">
+          <el-input
+            v-model="form.running"
+            placeholder="请输入联系人"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <el-form :inline="true" :model="form" label-width="80px">
+        <el-form-item label="单位地址">
+          <el-input
+            v-model="form.address"
+            class="wmid"
+            placeholder="请输入单位地址"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input v-model="form.running" placeholder="请输入电话"></el-input>
+        </el-form-item>
+      </el-form>
+      <span class="title">产品类型</span>
+      <el-form :inline="true" label-width="80px">
+        <el-form-item label="类型">
+          <el-select v-model="form.orderType" placeholder="请选择类型">
+            <el-option
+              v-for="item in orderTypeOptions"
+              :key="item.key"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="出入">
+          <el-radio v-model="radio" label="1">出库</el-radio>
+          <el-radio v-model="radio" label="2">入库</el-radio>
+          <el-select v-model="form.plugType" placeholder="请选择类型">
+            <el-option
+              v-for="item in plugTypeOptions"
+              :key="item.key"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="业务员">
+          <el-input
+            v-model="form.salesman"
+            placeholder="请输入业务员"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <span class="title">产品/部件名及数量</span>
     </div>
 
     <!-- 表格主体 -->
-    <el-table
+    <!-- <el-table
       ref="DeviceTable"
       :key="tableKey"
       v-loading="listLoading"
@@ -119,10 +127,9 @@
         align="center"
         sortable="custom"
         width="80"
-        ><template slot-scope="{ row }">
-          <span>{{ row.id }}</span>
-        </template></el-table-column
-      >
+      ><template slot-scope="{ row }">
+        <span>{{ row.id }}</span>
+      </template></el-table-column>
       <el-table-column
         prop="display_time"
         label="日期"
@@ -165,8 +172,8 @@
         show-overflow-tooltip
       />
       <el-table-column
-        prop="contact"
-        label="联系人"
+        prop="salesman"
+        label="收货人"
         align="center"
         width="70"
         show-overflow-tooltip
@@ -205,9 +212,9 @@
         align="center"
         width="100"
         show-overflow-tooltip
-        ><template slot-scope="{ row }">
-          <span>{{ row.detailList }}</span>
-        </template>
+      ><template slot-scope="{ row }">
+        <span>{{ row.detailList }}</span>
+      </template>
       </el-table-column>
 
       <el-table-column
@@ -216,9 +223,9 @@
         align="center"
         width="100"
         show-overflow-tooltip
-        ><template slot-scope="{ row }">
-          <span>{{ row.serialList }}</span>
-        </template>
+      ><template slot-scope="{ row }">
+        <span>{{ row.serialList }}</span>
+      </template>
       </el-table-column>
 
       <el-table-column
@@ -242,170 +249,94 @@
           </el-button>
         </template>
       </el-table-column>
-    </el-table>
-
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.limit"
-      @pagination="getList"
-    />
+    </el-table> -->
 
     <!-- 编辑弹出框 -->
-    <el-dialog  :visible.sync="dialogFormVisible" width="80%" center>
-      <!-- <div>{{ textMap[dialogStatus] }}</div> -->
-      <el-image
-        style="width: 30%"
-        :src="urlLogo"
-      ></el-image>
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form
         ref="dataForm"
         :rules="rules"
         :model="temp"
-        label-width="100px"
-        style="margin: 15px"
+        label-width="90px"
+        size="small"
+        style="width: ; margin-left: 10px"
       >
-        <h1 id="form-header">极客桥无人机{{ temp.orderType }}{{ temp.plugType }}库单</h1>
-        <el-form :inline="true" label-width="100px" class="mrb">
-          <el-form-item label="表单号">
+        <el-form-item label="序列号" prop="serial">
+          <el-col :span="elcol">
             <el-input
-              v-model="temp.order"
-              placeholder="请输入表单号"
-            ></el-input>
-          </el-form-item>
-          <el-form-item label="单据号">
+              v-model="temp.serial"
+              placeholder="请输入设备序列号，如‘f64b9684cdd9466a’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
+        <el-form-item label="机箱编号" prop="case">
+          <el-col :span="elcol">
             <el-input
-              v-model="temp.running"
-              placeholder="请输入单据号"
-            ></el-input>
-          </el-form-item>
-          <el-form-item label="单据号2">
+              v-model="temp.case"
+              placeholder="请输入机箱编号，如‘CGBX22DC066A’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
+        <el-form-item label="无人机编号" prop="uav">
+          <el-col :span="elcol">
             <el-input
-              v-model="temp.running"
-              placeholder="请输入单据号2"
-            ></el-input>
-          </el-form-item>
-        </el-form>
-        <el-divider></el-divider>
-        <div class="title">对方单位信息</div>
-        <el-form :inline="true" label-width="100px">
-          <el-form-item label="单位名称">
+              v-model="temp.uav"
+              placeholder="请输入无人机编号，如‘6HGUP22FB085C’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
+        <el-form-item label="灯组编号" prop="light">
+          <el-col :span="elcol">
             <el-input
-              v-model="temp.company"
-              class="wmid"
-              placeholder="请输入单位名称"
-            ></el-input>
-          </el-form-item>
+              v-model="temp.light"
+              placeholder="请输入灯组或广播编号，如‘6HGLT22FB085C’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
+        <el-form-item label="遥控器编号" prop="remote">
+          <el-col :span="elcol">
+            <el-input
+              v-model="temp.remote"
+              placeholder="请输入遥控器编号，如‘01GRC22MR075C’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
+        <el-form-item label="WiFi号" prop="wifi">
+          <el-col :span="elcol">
+            <el-input
+              v-model="temp.wifi"
+              placeholder="请输入WiFi号，如‘GBI_6200CFCF’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
+        <el-form-item label="对讲机号" prop="interphone">
+          <el-col :span="elcol">
+            <el-input
+              v-model="temp.interphone"
+              placeholder="请输入对讲机编号，如‘01GWR02NV003A’"
+              clearable
+            />
+          </el-col>
+        </el-form-item>
 
-          <el-form-item label="联系人">
-            <el-input
-              v-model="temp.contact"
-              placeholder="请输入联系人"
-            ></el-input>
-          </el-form-item>
-        </el-form>
-        <el-form :inline="true" label-width="100px">
-          <el-form-item label="单位地址">
-            <el-col :span="24">
-              <el-input
-                v-model="temp.address"
-                class="wmid"
-                placeholder="请输入单位地址"
-              ></el-input>
-            </el-col>
-          </el-form-item>
-          <el-form-item label="电话">
-            <el-input v-model="temp.phone" placeholder="请输入电话"></el-input>
-          </el-form-item>
-        </el-form>
-        <el-divider></el-divider>
-        <div class="title">产品类型</div>
-        <el-form :inline="true" label-width="100px">
-          <el-form-item label="类型">
-            <el-select v-model="temp.orderType" placeholder="请选择类型">
-              <el-option
-                v-for="item in orderTypeOptions"
+        <el-form-item label="状态" prop="useType">
+          <el-col :span="elcol">
+            <el-radio-group v-model="temp.useType">
+              <el-radio
+                v-for="item in useTypeOptions"
                 :key="item.key"
-                :value="item.value"
+                :label="item.key"
+                >{{ item.key }}</el-radio
               >
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="出入">
-            <el-radio v-model="temp.plugType" label="出">出库</el-radio>
-            <el-radio v-model="temp.plugType" label="入">入库</el-radio>
-          </el-form-item>
-          <el-form-item label="业务员">
-            <el-input
-              v-model="temp.salesman"
-              placeholder="请输入业务员"
-            ></el-input>
-          </el-form-item>
-        </el-form>
-        <el-divider></el-divider>
-        <div class="title">产品/部件名及数量</div>
-        <el-divider></el-divider>
-        <div class="title">
-          <span> 产品编号信息 </span>
-          <el-button
-            type="success"
-            icon="el-icon-plus"
-            circle
-            @click="addSerialRow"
-          >
-          </el-button>
-          <el-button
-            type="danger"
-            icon="el-icon-minus"
-            circle
-            @click="lessSerialRow"
-          >
-          </el-button>
-        </div>
-        <el-table
-          ref="OrderForm"
-          :data="temp.serialList"
-          border
-          style="width: 100%"
-          :row-class-name="tableRowClassName"
-          @cell-click="handleSerialEdit"
-        >
-          <el-table-column prop="id" label="序号" align="center" width="70"
-            ><template slot-scope="{ $index }">
-              <span>{{ $index + 1 }}</span>
-            </template></el-table-column
-          >
-          <el-table-column
-            v-for="(item, index) in serialData"
-            :key="index"
-            :label="item.label"
-            :prop="item.prop"
-            align="center"
-          >
-            <template slot-scope="scope">
-              <el-input
-                ref="serial"
-                v-if="'serial' + item.prop + scope.row.index == serialValue"
-                v-model="scope.row[scope.column.property]"
-                clearable
-                @blur="blurSerial"
-              />
-              <span v-else>{{ scope.row[scope.column.property] }}</span>
-            </template>
-          </el-table-column>
-          <!-- <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-          >
-            <template slot-scope="{ row }">
-              <el-button type="primary" size="mini" @click="handleUpdate(row)">
-                编辑
-              </el-button>
-            </template>
-          </el-table-column> -->
-        </el-table>
+            </el-radio-group>
+          </el-col>
+        </el-form-item>
 
         <el-form-item label="备注">
           <el-col :span="elcol">
@@ -432,11 +363,10 @@
 </template>
 
 <script>
-import { fetchList, createArticle, updateArticle } from "@/api/article";
+import { createArticle, fetchList, updateArticle } from "@/api/article";
+import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
-import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
-import logo from "@/icons/logo/GBILOGO4.png";
 
 export default {
   name: "DeviceIndex",
@@ -455,8 +385,11 @@ export default {
   data() {
     return {
       form: {},
+      formInline: {
+        user: "",
+        region: "",
+      },
       tableKey: 0,
-      urlLogo: logo,
       list: null,
       total: 0,
       listLoading: true,
@@ -469,13 +402,11 @@ export default {
         useType: undefined,
         sort: "-id",
       },
-      defaultOrderType:"销售",
-      defaultPlugType:"出",
       orderTypeOptions: [
         { key: "销售", value: "销售" },
         { key: "租赁", value: "租赁" },
         { key: "借用", value: "借用" },
-        { key: "其他", value: "其他" },
+        { key: "无偿", value: "无偿" },
         { key: "维修", value: "维修" },
         { key: "更换", value: "更换" },
       ],
@@ -483,47 +414,49 @@ export default {
         { key: "出", value: "出" },
         { key: "入", value: "入" },
       ],
-      serialData: [
-        {
-          label: "序列号",
-          prop: "serial",
-        },
-        {
-          label: "机箱编号",
-          prop: "case",
-        },
-        {
-          label: "飞机编号",
-          prop: "uav",
-        },
-        {
-          label: "灯组编号",
-          prop: "light",
-        },
-        {
-          label: "遥控器编号",
-          prop: "remote",
-        },
-        {
-          label: "WiFi",
-          prop: "wifi",
-        },
-        {
-          label: "对讲机编号",
-          prop: "interphone",
-        },
+      useTypeOptions: [
+        { key: "生产中", value: "生产中" },
+        { key: "测试中", value: "测试中" },
+        { key: "库存中", value: "库存中" },
+        { key: "可使用", value: "可使用" },
+        { key: "维修中", value: "维修中" },
+        { key: "租用中", value: "租用中" },
+        { key: "已售出", value: "已售出" },
+        { key: "已废弃", value: "已废弃" },
+        { key: "未知", value: "未知" },
       ],
-      serialValue: "",
-      serialDefault: {
-        serial: "",
-        case: "",
-        uav: "",
-        light: "",
-        remote: "",
-        wifi: "",
-        interphone: "",
+      useTypeColor: {
+        生产中: "#C0C0C0",
+        测试中: "#99DD00",
+        库存中: "#67C23A",
+        可使用: "#00DD00",
+        维修中: "#EE7700",
+        租用中: "#9900FF",
+        已售出: "#409EFF",
+        已废弃: "#909399",
+        未知: "#FF0000 ",
       },
+      treeExpandAll: false,
       isShowNumber: true,
+      isShowProduction: true,
+      isShowInsurance: true,
+      isShowFirmware: true,
+      isActivatedDisplay: {
+        true: "已激活",
+        false: "未激活",
+      },
+      isDisabledDisplay: {
+        true: "已禁用",
+        false: "未禁用",
+      },
+      versionDisplay: {
+        true: "试用版",
+        false: "正式版",
+      },
+      isInsurance: {
+        true: "是",
+        false: "否",
+      },
       temp: {
         id: undefined,
         serial: "",
@@ -590,17 +523,14 @@ export default {
     resetTemp() {
       this.temp = {
         id: undefined,
-        order: "",
-        running: "",
-        company: "",
-        address: "",
-        contact: "",
-        phone: "",
-        orderType: this.defaultOrderType,
-        plugType: this.defaultPlugType,
-        salesman: "",
-        detailList: [],
-        serialList: [this.serialDefault],
+        serial: "",
+        case: "",
+        uav: "",
+        light: "",
+        remote: "",
+        wifi: "",
+        interphone: "",
+        useType: "",
         remark: "",
       };
     },
@@ -665,26 +595,6 @@ export default {
         duration: 3000,
       });
       this.list.splice(index, 1);
-    },
-    handleSerialEdit(row, column) {
-      this.serialValue = "serial" + column.property + row.index;
-      this.$nextTick(() => {
-        if (this.$refs.serial[0]) {
-          this.$refs.serial[0].focus();
-        }
-      });
-    },
-    addSerialRow() {
-      this.temp.serialList.push(this.serialDefault);
-    },
-    lessSerialRow() {
-      this.temp.serialList.pop({});
-    },
-    blurSerial() {
-      this.serialValue = "";
-    },
-    tableRowClassName({ row, rowIndex }) {
-      row.index = rowIndex;
     },
     handleDownload() {
       this.downloadLoading = true;
@@ -753,27 +663,24 @@ export default {
   margin: 200px;
   max-width: 600px;
 }
-h1 {
-  margin-top: 0;
-  text-align: center;
-  font-family: '黑体';
-  color:#333
-}
 .wlong {
   width: 450px;
 }
 .wmid {
-  width: 400px;
+  width: 300px;
 }
 .wshort {
   width: 150px;
 }
+h2 {
+  margin: 10px;
+}
 .title {
-  margin: 5px auto 5px;
+  margin: 5px auto;
   font-weight: 700;
 }
-.el-divider {
-  margin: 5px auto 5px;
+.divider {
+  margin: 0 auto 10px;
 }
 .el-form-item {
   margin-bottom: 5px;

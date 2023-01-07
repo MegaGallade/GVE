@@ -33,6 +33,7 @@ for (let i = 0; i < count; i++) {
     order: "GBICKX" + "@date(yyMMdd)" + "@zip(3)",
     customer: "@ctitle(8)",
     name: "@ctitle(10)",
+    contact: '@cname',
     salesman: '@cname',
     activate: "",
     "state|1": ["生效中", "待激活", "已续保", "已失效"],
