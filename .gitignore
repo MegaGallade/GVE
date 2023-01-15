@@ -1,6 +1,10 @@
 .DS_Store
-node_modules/
-dist/
+node_modules
+/dist
+
+.env.local
+.env.*.local
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -18,6 +22,7 @@ selenium-debug.log
 *.njsproj
 *.sln
 *.local
+*.sw?
 
 package-lock.json
 yarn.lock

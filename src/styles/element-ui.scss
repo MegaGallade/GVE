@@ -54,6 +54,10 @@
   margin: 0 auto;
 }
 
+.el-form ,.dialog-footer{
+  margin: 0 15px 0 5px;
+}
+
 // refine element ui upload
 .upload-container {
   .el-upload {

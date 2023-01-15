@@ -253,21 +253,20 @@
     />
 
     <!-- 编辑弹出框 -->
-    <el-dialog  :visible.sync="dialogFormVisible" width="80%" center>
+    <el-dialog :visible.sync="dialogFormVisible" width="80%" center>
       <!-- <div>{{ textMap[dialogStatus] }}</div> -->
-      <el-image
-        style="width: 30%"
-        :src="urlLogo"
-      ></el-image>
+      <el-image style="width: 30%" :src="urlLogo"></el-image>
       <el-form
         ref="dataForm"
         :rules="rules"
         :model="temp"
-        label-width="100px"
+        :label-width=labelWidth
         style="margin: 15px"
       >
-        <h1 id="form-header">极客桥无人机{{ temp.orderType }}{{ temp.plugType }}库单</h1>
-        <el-form :inline="true" label-width="100px" class="mrb">
+        <h1 id="form-header">
+          极客桥无人机{{ temp.orderType }}{{ temp.plugType }}库单
+        </h1>
+        <el-form :inline="true" :label-width=labelWidth class="mrb">
           <el-form-item label="表单号">
             <el-input
               v-model="temp.order"
@@ -289,7 +288,7 @@
         </el-form>
         <el-divider></el-divider>
         <div class="title">对方单位信息</div>
-        <el-form :inline="true" label-width="100px">
+        <el-form :inline="true" :label-width=labelWidth>
           <el-form-item label="单位名称">
             <el-input
               v-model="temp.company"
@@ -305,15 +304,13 @@
             ></el-input>
           </el-form-item>
         </el-form>
-        <el-form :inline="true" label-width="100px">
+        <el-form :inline="true" :label-width=labelWidth>
           <el-form-item label="单位地址">
-            <el-col :span="24">
-              <el-input
-                v-model="temp.address"
-                class="wmid"
-                placeholder="请输入单位地址"
-              ></el-input>
-            </el-col>
+            <el-input
+              v-model="temp.address"
+              class="wmid"
+              placeholder="请输入单位地址"
+            ></el-input>
           </el-form-item>
           <el-form-item label="电话">
             <el-input v-model="temp.phone" placeholder="请输入电话"></el-input>
@@ -321,9 +318,9 @@
         </el-form>
         <el-divider></el-divider>
         <div class="title">产品类型</div>
-        <el-form :inline="true" label-width="100px">
+        <el-form :inline="true" :label-width=labelWidth>
           <el-form-item label="类型">
-            <el-select v-model="temp.orderType" placeholder="请选择类型">
+            <el-select v-model="temp.orderType" placeholder="请选择类型" style="width: 150px">
               <el-option
                 v-for="item in orderTypeOptions"
                 :key="item.key"
@@ -333,7 +330,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="出入">
-            <el-radio v-model="temp.plugType" label="出">出库</el-radio>
+            <el-radio v-model="temp.plugType" label="出" >出库</el-radio>
             <el-radio v-model="temp.plugType" label="入">入库</el-radio>
           </el-form-item>
           <el-form-item label="业务员">
@@ -349,8 +346,9 @@
         <div class="title">
           <span> 产品编号信息 </span>
           <el-button
-            type="success"
+            type="primary"
             icon="el-icon-plus"
+            size="mini"
             circle
             @click="addSerialRow"
           >
@@ -358,13 +356,14 @@
           <el-button
             type="danger"
             icon="el-icon-minus"
+            size="mini"
             circle
             @click="lessSerialRow"
           >
           </el-button>
         </div>
         <el-table
-          ref="OrderForm"
+          ref="SerialNumberTable"
           :data="temp.serialList"
           border
           style="width: 100%"
@@ -387,11 +386,11 @@
               <el-input
                 ref="serial"
                 v-if="'serial' + item.prop + scope.row.index == serialValue"
-                v-model="scope.row[scope.column.property]"
+                v-model="scope.row[item.prop]"
                 clearable
                 @blur="blurSerial"
               />
-              <span v-else>{{ scope.row[scope.column.property] }}</span>
+              <span v-else>{{ scope.row[item.prop] }}</span>
             </template>
           </el-table-column>
           <!-- <el-table-column
@@ -407,16 +406,7 @@
           </el-table-column> -->
         </el-table>
 
-        <el-form-item label="备注">
-          <el-col :span="elcol">
-            <el-input
-              v-model="temp.remark"
-              clearable
-              type="textarea"
-              placeholder="请输入"
-            />
-          </el-col>
-        </el-form-item>
+        
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false"> 取消 </el-button>
@@ -436,7 +426,7 @@ import { fetchList, createArticle, updateArticle } from "@/api/article";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
-import logo from "@/icons/logo/GBILOGO4.png";
+
 
 export default {
   name: "DeviceIndex",
@@ -458,6 +448,17 @@ export default {
       tableKey: 0,
       urlLogo: logo,
       list: null,
+      serialList: [
+        {
+          serial: "",
+          case: "",
+          uav: "",
+          light: "",
+          remote: "",
+          wifi: "",
+          interphone: "",
+        },
+      ],
       total: 0,
       listLoading: true,
       listQuery: {
@@ -469,8 +470,8 @@ export default {
         useType: undefined,
         sort: "-id",
       },
-      defaultOrderType:"销售",
-      defaultPlugType:"出",
+      defaultOrderType: "销售",
+      defaultPlugType: "出",
       orderTypeOptions: [
         { key: "销售", value: "销售" },
         { key: "租赁", value: "租赁" },
@@ -526,14 +527,17 @@ export default {
       isShowNumber: true,
       temp: {
         id: undefined,
-        serial: "",
-        case: "",
-        uav: "",
-        light: "",
-        remote: "",
-        wifi: "",
-        interphone: "",
-        useType: "",
+        order: "",
+        running: "",
+        company: "",
+        address: "",
+        contact: "",
+        phone: "",
+        orderType: "",
+        plugType: "",
+        salesman: "",
+        detailList: [],
+        serialList: [],
         remark: "",
       },
       rules: {},
@@ -544,6 +548,7 @@ export default {
         create: "新建",
       },
       downloadLoading: false,
+      labelWidth:'80px',
       elcol: 20,
     };
   },
@@ -588,6 +593,7 @@ export default {
       this.handleFilter();
     },
     resetTemp() {
+      const list = Object.assign({},this.serialDefault);
       this.temp = {
         id: undefined,
         order: "",
@@ -600,7 +606,7 @@ export default {
         plugType: this.defaultPlugType,
         salesman: "",
         detailList: [],
-        serialList: [this.serialDefault],
+        serialList: [list],
         remark: "",
       };
     },
@@ -631,6 +637,8 @@ export default {
     },
     handleUpdate(row) {
       this.temp = Object.assign({}, row); // copy obj
+      this.temp.serialList = Object.assign([], row.serialList);
+      this.serialList = Object.assign([], row.serialList);
       this.temp.timestamp = new Date(this.temp.timestamp);
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
@@ -642,6 +650,8 @@ export default {
       this.$refs["dataForm"].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
+          const tempSerialData = Object.assign({}, this.serialList);
+          // tempData.serialList=tempSerialData
           tempData.timestamp = +new Date(tempData.timestamp);
           updateArticle(tempData).then(() => {
             const index = this.list.findIndex((v) => v.id === this.temp.id);
@@ -675,10 +685,11 @@ export default {
       });
     },
     addSerialRow() {
-      this.temp.serialList.push(this.serialDefault);
+      const data = Object.assign({}, this.serialDefault);
+      this.temp.serialList.push(data);
     },
     lessSerialRow() {
-      this.temp.serialList.pop({});
+      this.temp.serialList.pop();
     },
     blurSerial() {
       this.serialValue = "";
@@ -756,14 +767,15 @@ export default {
 h1 {
   margin-top: 0;
   text-align: center;
-  font-family: '黑体';
-  color:#333
+  font-family: "黑体", "Helvetica Neue", Helvetica, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  color: #333;
 }
 .wlong {
   width: 450px;
 }
 .wmid {
-  width: 400px;
+  width: 35vw;
 }
 .wshort {
   width: 150px;

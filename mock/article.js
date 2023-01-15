@@ -30,7 +30,7 @@ for (let i = 0; i < count; i++) {
     insurance: '@zip(20)',
     "isInsurance|1": false,
     productionOrder: "@zip(12)",
-    order: "GBICKX" + "@date(yyMMdd)" + "@zip(3)",
+    indent: "GBICKX" + "@date(yyMMdd)" + "@zip(3)",
     customer: "@ctitle(8)",
     name: "@ctitle(10)",
     contact: '@cname',
@@ -50,20 +50,20 @@ for (let i = 0; i < count; i++) {
     serial: "@zip(16)",
     "detailList|1-5": [{
       serial: "@zip(2)",
-      case: "@zip(2)",
+      platform: "@zip(2)",
     }],
     "serialList|1-5": [{
       serial: "@zip(16)",
-      case: "CGBX" + "@zip(8)",
+      platform: "CGBX" + "@zip(8)",
       uav: "6HGUP" + "@zip(8)",
-      light: "6HGLT" + "@zip(8)",
+      ptz: "6HGLT" + "@zip(8)",
       remote: "01GRC" + "@zip(8)",
       interphone: "01GWR" + "@zip(8)",
       wifi: "GBI_" + "@zip(8)",
     }],
-    case: "CGBX" + "@zip(8)",
+    platform: "CGBX" + "@zip(8)",
     uav: "6HGUP" + "@zip(8)",
-    light: "6HGLT" + "@zip(8)",
+    ptz: "6HGLT" + "@zip(8)",
     remote: "01GRC" + "@zip(8)",
     interphone: "01GWR" + "@zip(8)",
     wifi: "GBI_" + "@zip(8)",
@@ -77,7 +77,16 @@ for (let i = 0; i < count; i++) {
     "deviceType|1": ["照明机组", "广播机组", "直播机组", "其他"],
     "uavType|1": ["照明机", "广播机", "直播机", "机巢机", "航拍机", "其他"],
     company: "@ctitle(6)" + '有限公司',
-    address: "@city(true)"
+    address: "@city(true)",
+    materialCode:"@zip(8)",
+    materialName:"@ctitle(8)",
+    materialModel:"@ctitle(8)",
+    materialType:"@ctitle(3)",
+    materialClass:"@ctitle(3)",
+    materialUnit:"@ctitle(1)",
+  
+    materialCount:"@zip(3)",
+    materialPrice:"@zip(3)",
   }))
 }
 

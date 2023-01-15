@@ -29,7 +29,7 @@ export default {
   },
   data() {
     return {
-      show: false
+      show:false
     }
   },
   computed: {

@@ -138,6 +138,38 @@ export const asyncRoutes = [
     }]
   },
   {
+    path: '/material',
+    component: Layout,
+    redirect: '/material/index',
+    name: 'Device',
+    meta: { title: '物料', icon: 'material', roles: ['admin', 'editor'] },
+    children: [{
+      path: 'index',
+      name: 'MaterialManage',
+      component: () => import('@/views/material/index'),
+      meta: { title: '物料管理', icon: '' }
+    }, {
+      path: 'case',
+      name: 'CaseManage',
+      component: () => import('@/views/device/case'),
+      meta: { title: '机箱列表', icon: '' }
+    }]
+  },
+  {
+    path: '/sql',
+    component: Layout,
+    redirect: '/sql/index',
+    name: 'Order',
+    meta: { title: 'SQL', icon: 'order', roles: ['admin', 'editor'] },
+    children: [{
+      path: 'index',
+      name: 'SqlManage',
+      component: () => import('@/views/sql/index'),
+      meta: {   title: 'SQL',}
+    },
+    ]
+  },
+  {
     path: '/order',
     component: Layout,
     redirect: '/order/index',
