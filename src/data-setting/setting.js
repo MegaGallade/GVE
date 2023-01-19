@@ -1,10 +1,12 @@
-const dataformat = {
+const dataSetting = {
   common: {
+    elcol: 24,
+    yearDaysDefault: 364,
     textMap: {
       update: "编辑",
       create: "新建",
     },
-    formatTimeList: ['start_date', 'end_date', 'create_time', 'modify_time'],
+    formatTimeList: ['start_date', 'end_date', 'this_create_time', 'this_modify_time'],
     datePickerOptions: {
       shortcuts: [
         {
@@ -68,27 +70,24 @@ const dataformat = {
         { required: true, message: "title is required", trigger: "blur" },
       ],
     },
-  },
-  constant: {
-    elcol: 24,
-    yearDaysDefault: 364,
-    delayDaysDefault: 30,
-    remindDaysDefault: 30,
+
   },
   insurance: {
+    delayDaysDefault: 30,
+    remindDaysDefault: 30,
     listQuery: {
       page: 1,
-      limit: 20,
+      limit: 100,
       insurance: "",
       uav: "",
       state: "",
       sort: "-id",
     },
     stateTypeOptions: [
-      { value: "未激活", label: "未激活" },
-      { value: "生效中", label: "生效中" },
-      { value: "已续保", label: "已续保" },
-      { value: "已失效", label: "已失效" },
+      { value: "未激活", label: "未激活" ,text:"未激活" },
+      { value: "生效中", label: "生效中" ,text:"生效中" },
+      { value: "已续保", label: "已续保" ,text:"已续保" },
+      { value: "已失效", label: "已失效" ,text:"已失效" },
     ],
     stateType: {
       未激活: "info",
@@ -130,12 +129,11 @@ const dataformat = {
       interphone: "",
       remark: "",
       change: "",
-      is_delete: false,
-      create_time: undefined,
-      create_uid: "",
-      modify_time: undefined,
-      modify_uid: "",
-
+      this_is_delete: false,
+      this_create_time: undefined,
+      this_create_uid: "",
+      this_modify_time: undefined,
+      this_modify_uid: "",
     },
     tHeader: [
       "NO.",
@@ -186,4 +184,4 @@ const dataformat = {
   }
 }
 
-export default dataformat
+export default dataSetting

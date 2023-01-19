@@ -1,28 +1,42 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input
+      <el-autocomplete
         v-model="listQuery.insurance"
-        placeholder="保单号"
+        placeholder="请输入保单号"
         clearable
-        style="width: 200px"
+        style="width: 210px"
         class="filter-item"
+        :trigger-on-focus="true"
+        :fetch-suggestions="querySearchInsurance"
         @keyup.enter.native="handleFilter"
       />
-      <el-input
+      <el-autocomplete
         v-model="listQuery.uav"
-        placeholder="飞机编号"
+        placeholder="请输入飞机编号"
         clearable
-        style="width: 200px"
+        style="width: 170px"
         class="filter-item"
+        :trigger-on-focus="true"
+        :fetch-suggestions="querySearchUav"
         @keyup.enter.native="handleFilter"
       />
+      <!-- <el-autocomplete
+        v-model="listQuery.company"
+        placeholder="请输入单位名称"
+        clearable
+        style="width: 180px"
+        class="filter-item"
+        :trigger-on-focus="true"
+        :fetch-suggestions="querySearchCompany"
+        @keyup.enter.native="handleFilter"
+      /> -->
       <el-select
         v-model="listQuery.state"
-        placeholder="状态"
+        placeholder="请选择状态"
         clearable
         class="filter-item"
-        style="width: 100px"
+        style="width: 120px"
       >
         <el-option
           v-for="item in stateTypeOptions"
@@ -34,12 +48,20 @@
       <el-button
         v-waves
         class="filter-item"
-        style="margin-left: 1px"
         type="primary"
         icon="el-icon-search"
         @click="handleFilter"
       >
         查询
+      </el-button>
+      <el-button
+        v-waves
+        class="filter-item"
+        type="danger"
+        icon="el-icon-time"
+        @click="searchDueDays"
+      >
+        查询即将到期
       </el-button>
       <el-button
         class="filter-item"
@@ -79,7 +101,7 @@
       border
       tooltip-effect="dark"
       highlight-current-row
-      height="650"
+      height="600"
       style="width: 100%"
       :header-cell-style="{ background: '#eef1fc', color: '#303132' }"
       @sort-change="sortChange"
@@ -103,7 +125,6 @@
         width="180"
         show-overflow-tooltip
       >
-        <!-- <template slot-scope="{ row }">{{ row.insurance }}</template> -->
       </el-table-column>
       <el-table-column
         prop="uav"
@@ -139,11 +160,11 @@
       <el-table-column
         prop="state"
         label="状态"
-        sortable
         align="center"
         width="80"
         show-overflow-tooltip
       >
+        >
         <template slot-scope="{ row }">
           <el-tag :type="stateType[row.state]" effect="plain">{{
             row.state
@@ -351,13 +372,13 @@
       </el-table-column>
     </el-table>
 
-    <!-- <pagination
+    <pagination
       v-show="total > 0"
       :total="total"
       :page.sync="listQuery.page"
       :limit.sync="listQuery.limit"
       @pagination="getList"
-    /> -->
+    />
 
     <!-- 新建&编辑 -->
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
@@ -525,12 +546,14 @@
 </template>
 
 <script>
-import { addSql, delSql, getSql, updateSql } from "@/api/article";
+import { Insurance } from "@/api/sql";
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
-import dataformat from "@/data-format/data";
+import setting from "@/data-setting/setting";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
 import "@/utils/date-format";
+
+const sql = new Insurance();
 
 export default {
   name: "InsuranceIndex",
@@ -548,76 +571,123 @@ export default {
   },
   data() {
     return {
-      date: new Date(),
       tableKey: 0,
-      list: null,
-      form: null,
+      list: [],
+      form: [],
       total: 0,
+      maxId: 0,
       listLoading: true,
       dialogFormVisible: false,
       dialogStatus: "",
       downloadLoading: false,
-      maxId: 0,
 
-      textMap: dataformat.common.textMap,
-      rules: dataformat.common.rules,
-      placeholder: dataformat.common.placeholder,
-      datePickerOptions: dataformat.common.datePickerOptions,
-      elcol: dataformat.constant.elcol,
-      yearDaysDefault: dataformat.constant.yearDaysDefault,
-      delayDaysDefault: dataformat.constant.delayDaysDefault,
-      remindDaysDefault: dataformat.constant.remindDaysDefault,
-      formatTimeList: dataformat.common.formatTimeList,
+      elcol: setting.common.elcol,
+      formatTimeList: setting.common.formatTimeList,
+      textMap: setting.common.textMap,
+      rules: setting.common.rules,
+      placeholder: setting.common.placeholder,
+      datePickerOptions: setting.common.datePickerOptions,
+      yearDaysDefault: setting.common.yearDaysDefault,
+      delayDaysDefault: setting.insurance.delayDaysDefault,
+      remindDaysDefault: setting.insurance.remindDaysDefault,
+      temp: Object.assign({}, setting.insurance.temp),
+      listQuery: Object.assign({}, setting.insurance.listQuery),
+      stateTypeOptions: setting.insurance.stateTypeOptions,
+      stateType: setting.insurance.stateType,
+      activateDisplay: setting.insurance.activateDisplay,
+      remindDisplay: setting.insurance.remindDisplay,
+      renewalDisplay: setting.insurance.renewalDisplay,
 
-      temp: Object.assign({}, dataformat.insurance.temp),
-      listQuery: Object.assign({}, dataformat.insurance.listQuery),
-      stateTypeOptions: dataformat.insurance.stateTypeOptions,
-      stateType: dataformat.insurance.stateType,
-      activateDisplay: dataformat.insurance.activateDisplay,
-      remindDisplay: dataformat.insurance.remindDisplay,
-      renewalDisplay: dataformat.insurance.renewalDisplay,
-
+      insuranceList: [],
+      uavList: [],
+      companyList: [],
       isShowFull: false,
       delayDays: 0,
       delayDisabled: true,
       cannotDelete: false,
+      value: [0, 30],
     };
   },
   created() {
+    sql.updateDays();
+    sql.updateState();
     this.getList();
   },
+  mounted() {
+    sql.getInsurance().then((res) => {
+      this.insuranceList = res.data.result;
+    });
+    sql.getUav().then((res) => {
+      this.uavList = res.data.result;
+    });
+    sql.getCompany().then((res) => {
+      this.companyList = res.data.result;
+    });
+  },
   methods: {
+    // 获取数据列表
     getList() {
       this.listLoading = true;
-      getSql({ type: "search", value: this.listQuery })
+      sql.getMaxId().then((res) => {
+        this.maxId = res.data.result;
+      });
+      sql.getTotal().then((res) => {
+        this.total = res.data.result;
+      });
+      sql
+        .getSql(this.listQuery)
         .then((res) => {
-          this.list = res.data;
-          this.total = res.data.length;
-          this.pretreatment(this.list);
+          this.list = res.data.result;
+          // this.pretreatment(this.list);
           this.listLoading = false;
         })
         .catch((err) => {
           console.log("获取数据失败" + err);
         });
-      getSql({ type: "maxId" })
+    },
+    // 条件查询
+    handleFilter() {
+      this.listQuery.page = 1;
+      this.getList();
+    },
+    searchDueDays() {
+      this.listLoading = true;
+      sql
+        .getDueDays()
         .then((res) => {
-          this.maxId = res.data[0]["max(id)"];
+          this.list = res.data.result;
+          this.total = res.data.result.length;
+          this.listLoading = false;
         })
         .catch((err) => {
           console.log("获取数据失败" + err);
         });
     },
-    handleFilter() {
-      this.listQuery.page = 1;
-      this.getList();
+    // 输入后匹配输入建议
+    querySearchInsurance(queryString, cb) {
+      const list = this.insuranceList;
+      this.querySearch(queryString, cb, list);
     },
-    handleModifyStatus(row, status) {
-      this.$message({
-        message: "操作成功",
-        type: "success",
-      });
-      row.status = status;
+    querySearchUav(queryString, cb) {
+      const list = this.uavList;
+      this.querySearch(queryString, cb, list);
     },
+    querySearchCompany(queryString, cb) {
+      const list = this.companyList;
+      this.querySearch(queryString, cb, list);
+    },
+    querySearch(queryString, cb, list) {
+      const results = queryString
+        ? list.filter(this.createFilter(queryString))
+        : list;
+      cb(results);
+    },
+    createFilter(queryString) {
+      return (list) => {
+        return list.value.toLowerCase().indexOf(queryString.toLowerCase()) > -1;
+      };
+    },
+    // 重新排序
     sortChange(data) {
       const { prop, order } = data;
       if (prop === "id") {
@@ -625,19 +695,17 @@ export default {
       }
     },
     sortByID(order) {
-      if (order === "ascending") {
-        this.listQuery.sort = "+id";
-      } else {
-        this.listQuery.sort = "-id";
-      }
-      this.handleFilter();
+      this.listQuery.sort = order === "ascending" ? "+id" : "-id";
+      handleFilter();
     },
+
+    // 重置数据，在新建表之前
     resetDefault() {
-      this.temp = Object.assign({}, dataformat.insurance.temp);
+      this.temp = Object.assign({}, setting.insurance.temp);
       this.delayDays = this.delayDaysDefault;
       this.delayDisabled = true;
     },
-    //新建
+    // 新建表单按钮
     handleCreate() {
       this.resetDefault();
       this.dialogStatus = "create";
@@ -646,6 +714,7 @@ export default {
         this.$refs["dataForm"].clearValidate();
       });
     },
+    // 新建表单确认
     createData() {
       this.$refs["dataForm"].validate((valid) => {
         if (valid) {
@@ -653,8 +722,9 @@ export default {
           this.temp.id = this.maxId;
           this.temp.state = this.temp.is_activate ? "生效中" : "未激活";
           this.temp.days = this.daysCalculate(this.temp);
+          this.temp.this_create_time = Date.now();
           this.formatTime(this.temp);
-          addSql({ type: "create", value: this.temp }).then(() => {
+          sql.addSql({ type: "create", value: this.temp }).then(() => {
             this.list.unshift(this.temp);
             this.dialogFormVisible = false;
             this.$notify({
@@ -667,22 +737,24 @@ export default {
         }
       });
     },
-    //编辑
+    // 编辑按钮
     handleUpdate(row) {
-      this.temp = Object.assign({}, row); // copy obj
+      this.temp = Object.assign({}, row);
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
         this.$refs["dataForm"].clearValidate();
       });
     },
+    // 编辑确认
     updateData() {
       this.$refs["dataForm"].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
-          tempData.modify_time = Date.now();
+          tempData.this_modify_time = Date.now();
           this.formatTime(tempData);
-          updateSql({ type: "edit", id: tempData.id, value: tempData })
+          sql
+            .updateSql({ type: "edit", id: tempData.id, value: tempData })
             .then((res) => {
               // console.log(res.data);
               if (res.data.status == 200) {
@@ -708,8 +780,10 @@ export default {
         }
       });
     },
+    // 删除数据，伪删除，待补充
     handleDelete(row, index) {
-      delSql({ type: "delete", id: row.id })
+      sql
+        .delSql({ type: "delete", id: row.id })
         .then((res) => {
           if (res.data.status == 200) {
             this.$notify({
@@ -730,56 +804,63 @@ export default {
           console.log("操作失败" + err);
         });
     },
+    // 下载
     handleDownload() {
       this.downloadLoading = true;
       import("@/vendor/Export2Excel").then((excel) => {
-        const tHeader = dataformat.insurance.tHeader;
-        const filterVal = dataformat.insurance.filterVal;
+        const tHeader = setting.insurance.tHeader;
+        const filterVal = setting.insurance.filterVal;
         const data = this.formatJson(filterVal);
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: "保险一览" + this.date.format("yyyyMMdd"),
+          filename: "保险一览" + parseTime(Date.now(), "{y}{m}{d}"),
         });
         this.downloadLoading = false;
       });
     },
+    // 格式化部分数据，在导出表格之前
     formatJson(filterVal) {
       return this.list.map((v) =>
         filterVal.map((j) => {
-          if (j === "modify_time") {
-            return parseTime(v[j]);
+          if (j === "start_date" || j === "end_date") {
+            return parseTime(new Date(v[j]), "{y}年{m}月{d}日");
+          } else if (
+            j === "is_activate" ||
+            j === "is_remind" ||
+            j === "is_renewal"
+          ) {
+            return v[j] ? "是" : "否";
           } else {
             return v[j];
           }
         })
       );
     },
+    // 格式化时间，在数据录入数据库之前
     formatTime(obj) {
       const list = this.formatTimeList;
       for (const key in obj) {
-        if (list.indexOf(key) > -1) {
-          if (typeof obj[key] != "undefined") {
-            obj[key] = parseTime(new Date(obj[key]));
-          }
+        if (list.indexOf(key) > -1 && typeof obj[key] != "undefined") {
+          obj[key] = parseTime(new Date(obj[key]));
         }
       }
     },
+
     getSortClass: function (key) {
       const sort = this.listQuery.sort;
       return sort === `+${key}` ? "ascending" : "descending";
     },
-
+    // 显示和隐藏部分数据
     showFull() {
       this.tableKey = this.tableKey + 1;
     },
 
-    // 数据预处理，状态和天数
+    // 数据预处理，状态和天数，已弃用
     pretreatment(list) {
       for (let i = 0; i < list.length; i++) {
         this.daysCalculate(list[i]);
         this.stateCalculate(list[i]);
-        this.maxId = Math.max(list[i].id, this.maxId);
       }
       return list;
     },
@@ -800,13 +881,14 @@ export default {
       }
       return row.state;
     },
-    // 天数计算和显示
+    // 天数计算
     daysCalculate(row) {
       const end = new Date(row.end_date);
       let days = Math.ceil((end.getTime() - Date.now()) / 3600 / 1000 / 24);
       row.days = days;
       return days;
     },
+    // 天数颜色显示
     daysType(row) {
       if (row.state == "未激活") {
         return "info";
@@ -819,7 +901,7 @@ export default {
         return "warning";
       }
     },
-    // 提醒和续保
+    // 提醒颜色显示
     remindType(row) {
       if (row.is_remind) {
         return "success";
@@ -829,6 +911,7 @@ export default {
         } else return "primary";
       }
     },
+    // 续保颜色显示
     renewalType(row) {
       if (!row.is_remind) {
         return "info";
@@ -842,26 +925,26 @@ export default {
         }
       }
     },
-    // 更改激活，提醒，续保
+    // 更改激活按钮
     handleModifyActivate(row, is_activate) {
-      let message = "";
-      let type = "";
       if (row.is_remind) {
-        message = "该保险无法设置为未激活，请重新核对";
-        type = "warning";
+        this.$message({
+          message: "该保险无法设置为未激活，请重新核对",
+          type: "warning",
+        });
       } else {
         row.is_activate = is_activate;
-        if (is_activate) {
-          message = "改为已激活成功！";
-        } else {
-          message = "改为未激活成功！";
-        }
-        type = "success";
-        updateSql({ type: "is_activate", id: row.id, value: is_activate })
+        sql
+          .updateSql({ type: "is_activate", id: row.id, value: is_activate })
           .then((res) => {
             if (res.data.status == 200) {
+              this.stateCalculate(row);
+              this.$message({
+                message: is_activate ? "改为已激活成功！" : "改为未激活成功！",
+                type: "success",
+              });
             } else {
-              this.message({
+              this.$message({
                 message: "修改失败",
                 type: "error",
               });
@@ -871,34 +954,33 @@ export default {
             console.log("操作失败" + err);
           });
       }
-      this.stateCalculate(row);
-      this.$message({
-        message: message,
-        type: type,
-      });
     },
+    // 更改提醒按钮
     handleModifyRemind(row, is_remind) {
-      let message = "";
-      let type = "";
       if (!row.is_activate) {
-        message = "请先激活保险！";
-        type = "warning";
+        this.$message({
+          message: "请先激活保险！",
+          type: "warning",
+        });
       } else {
         if (row.days > this.remindDaysDefault * 2) {
-          message = "时间未到，还不需要提醒。";
+          this.$message({
+            message: "时间未到，还不需要提醒。",
+            type: "info",
+          });
         } else {
           row.is_remind = is_remind;
-          if (is_remind) {
-            message = "改为已提醒成功！";
-          } else {
-            message = "改为未提醒成功！";
-          }
-          type = "success";
-          updateSql({ type: "is_remind", id: row.id, value: is_remind })
+          sql
+            .updateSql({ type: "is_remind", id: row.id, value: is_remind })
             .then((res) => {
               if (res.data.status == 200) {
+                this.stateCalculate(row);
+                this.$message({
+                  message: is_remind ? "改为已提醒成功！" : "改为未提醒成功！",
+                  type: "success",
+                });
               } else {
-                this.message({
+                this.$message({
                   message: "修改失败",
                   type: "error",
                 });
@@ -909,31 +991,28 @@ export default {
             });
         }
       }
-      this.stateCalculate(row);
-      this.$message({
-        message: message,
-        type: type,
-      });
     },
+    // 更改续保按钮
     handleModifyRenewal(row, is_renewal) {
-      let message = "";
-      let type = "";
       if (!row.is_remind) {
+        this.$message({
+          message: "请先发送保险提醒！",
+          type: "warning",
+        });
         message = "请先发送保险提醒！";
         type = "warning";
       } else {
         row.is_renewal = is_renewal;
-        if (is_renewal) {
-          message = " 改为已续保成功！";
-        } else {
-          message = " 改为未续保成功！";
-        }
-        type = "success";
-        updateSql({ type: "is_renewal", id: row.id, value: is_renewal })
+        sql
+          .updateSql({ type: "is_renewal", id: row.id, value: is_renewal })
           .then((res) => {
             if (res.data.status == 200) {
+              this.$message({
+                message: is_renewal ? "改为已续保成功！" : "改为未续保成功！",
+                type: "success",
+              });
             } else {
-              this.message({
+              this.$message({
                 message: "修改失败",
                 type: "error",
               });
@@ -943,11 +1022,6 @@ export default {
             console.log("操作失败" + err);
           });
       }
-      this.stateCalculate(row);
-      this.$message({
-        message: message,
-        type: type,
-      });
     },
     // 激活和延迟时间设置
     activateChange(is_activate) {
@@ -970,6 +1044,7 @@ export default {
       date.setTime(date.getTime() + 3600 * 1000 * 24 * days);
       return date;
     },
+    // 开始时间更改时同时更改结束时间，默认一年
     startDateChange(date) {
       if (date) {
         const start = new Date(date);
